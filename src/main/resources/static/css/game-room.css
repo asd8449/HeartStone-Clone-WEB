@@ -1,0 +1,222 @@
+/* 기본 설정 */
+:root {
+    --card-width: 90px;
+    --card-height: 120px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    background-color: #3a2a1d;
+    color: white;
+    user-select: none;
+    overflow: hidden;
+}
+
+/* 게임 보드 전체 - 중앙 보드와 오른쪽 UI를 좌우로 배치 */
+.game-board {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* 중앙 게임 보드 - Flexbox 컨테이너로 설정 */
+.center-board {
+    flex-grow: 1; /* 남는 공간을 모두 차지 */
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+/* 필드 (하수인이 놓이는 공간) */
+.field-container {
+    width: 100%;
+    flex-grow: 1; /* 필드 영역이 남는 공간을 차지하도록 설정 */
+    min-height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* 필드 간 간격 1px로 설정 */
+#opponent-field {
+    margin-bottom: 1px;
+}
+
+/* 영웅 컨테이너 */
+.hero-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 5px 0;
+}
+.hero-target-area {
+    position: relative;
+    width: 80px; height: 80px;
+    cursor: crosshair;
+}
+.hero-target-area img {
+    width: 100%; height: 100%; border-radius: 50%;
+    border: 3px solid #c8b5a6; box-shadow: 0 0 15px black;
+}
+.hero-target-area .health {
+    position: absolute; bottom: -5px; right: -5px;
+    background-color: #d10000; color: white; font-weight: bold;
+    font-size: 1em; padding: 4px 7px; border-radius: 50%; border: 2px solid white;
+}
+.hero-power-btn {
+    width: 65px; height: 65px; background-color: #6f4e37;
+    border: 2px solid #c8b5a6; border-radius: 50%; cursor: pointer;
+    display: flex; flex-direction: column; justify-content: center;
+    align-items: center; text-align: center; padding: 5px; color: white;
+    text-shadow: 1px 1px 2px black;
+}
+.hero-power-btn:disabled { filter: grayscale(80%); cursor: not-allowed; }
+.hero-power-btn.targeting { box-shadow: 0 0 15px red; border-color: red; }
+
+
+/* 손패 컨테이너 */
+.hand-container {
+    width: 100%;
+    min-height: calc(var(--card-height) + 10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 0;
+}
+.hand-container.opponent { gap: -60px; }
+.hand-container.me { gap: 10px; }
+.hand-container.me .card:hover { transform: translateY(-30px) scale(1.05); z-index: 100; }
+.card.card-back {
+    background-color: #1a1a1a; border: 2px solid #555; box-shadow: inset 0 0 10px black;
+    transition: transform 0.2s ease-out;
+}
+
+/* 오른쪽 UI 컨테이너 */
+.right-ui-container {
+    width: 200px; /* 오른쪽 UI의 너비 */
+    flex-shrink: 0; /* 너비가 줄어들지 않도록 설정 */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around; /* 요소들을 위아래로 균등하게 배치 */
+    align-items: center;
+    padding: 20px 0;
+    height: 100%;
+    box-sizing: border-box;
+}
+.player-info {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 15px;
+}
+.mana-display {
+    font-size: 1.8em; font-weight: bold; color: #4ddbff;
+    text-shadow: 1px 1px 2px black, 0 0 10px #4ddbff;
+}
+.deck-display {
+    position: relative; width: 70px; height: 100px; cursor: pointer;
+    border: 2px solid #6c5a49; background-color: #4a3a2d;
+    border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.deck-display span {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5em; font-weight: bold; text-shadow: 0 0 5px black;
+}
+.center-area {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 10px;
+}
+#endTurnButton {
+    padding: 15px 25px; font-size: 1.2em; font-weight: bold;
+    border-radius: 8px; border: none; background-color: #4caf50;
+    color: white; cursor: pointer; transition: background-color 0.2s, box-shadow 0.3s;
+}
+#endTurnButton:hover:not(:disabled) { background-color: #66bb6a; }
+#endTurnButton:disabled { background-color: #888; cursor: not-allowed; }
+#endTurnButton.my-turn-button-glow { animation: pulse-green 1.5s infinite; }
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 7px #4caf50; }
+  50% { box-shadow: 0 0 20px #66bb6a; }
+  100% { box-shadow: 0 0 7px #4caf50; }
+}
+#turn-info {
+    background: rgba(0,0,0,0.5); padding: 5px 15px;
+    border-radius: 5px; font-size: 1.1em; text-align: center;
+}
+
+/* 카드 공통 스타일 및 기타 UI 요소들 */
+.card {
+    width: var(--card-width); height: var(--card-height); border: 2px solid #ccc;
+    background-color: #222; background-size: cover; background-position: center;
+    border-radius: 8px; box-shadow: 3px 3px 5px rgba(0,0,0,0.5); position: relative;
+    color: white; text-shadow: 1px 1px 2px black, 0 0 5px black; flex-shrink: 0;
+    transition: all 0.2s;
+}
+.card.can-play { cursor: grab; border-color: gold !important; box-shadow: 0 0 10px gold; }
+.card.can-attack { border-color: limegreen !important; box-shadow: 0 0 10px limegreen; cursor: crosshair; }
+.card.is-attacking { border-color: red !important; box-shadow: 0 0 15px red; }
+.targetable:hover, .targetable.targeting-active { border-color: red !important; box-shadow: 0 0 15px red; cursor: crosshair; }
+.card-cost {
+    position: absolute; top: -5px; left: -5px; background: #007bff; color: white;
+    width: 24px; height: 24px; border-radius: 50%; display:flex; align-items:center;
+    justify-content: center; font-weight: bold; font-size: 1.1em; border: 2px solid white;
+}
+.card-stats {
+    display: flex; justify-content: space-between; font-weight: bold;
+    font-size: 1.2em; padding: 0 5px; position: absolute; bottom: 5px;
+    left: 0; right: 0;
+}
+.card-attack { color: yellow; }
+.card-health { color: #ff4d4d; }
+.info-bar { 
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,0.2); padding: 5px 15px; 
+    border-radius: 5px; z-index: 500;
+}
+.placeholder {
+    opacity: 0.4; border: 2px dashed gold !important; background: rgba(255, 215, 0, 0.2) !important; box-shadow: none !important;
+}
+#attack-arrow { position: absolute; background-color: red; height: 5px; transform-origin: left; pointer-events: none; display: none; z-index: 1000; }
+#attack-arrow::after { content: ''; position: absolute; right: -5px; top: -7px; border-width: 10px; border-style: solid; border-color: transparent transparent transparent red; }
+#card-detail-popover { display: none; position: absolute; width: 250px; padding: 15px; background-color: rgba(0, 0, 0, 0.9); border: 2px solid #fff; border-radius: 10px; z-index: 10000; pointer-events: none; }
+#card-detail-popover h3 { margin: 0 0 10px 0; color: gold; }
+#card-detail-popover p { margin: 5px 0; }
+#card-detail-popover .keywords { font-style: italic; color: #a0a0a0; }
+
+.damage-text {
+    position: absolute; /* 보드 내 자유로운 위치를 위해 */
+    font-size: 3em; /* 눈에 띄게 큰 글씨 */
+    font-weight: bold;
+    color: #ff4d4d; /* 강렬한 빨간색 */
+    text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black, 0 0 10px white; /* 검은 테두리와 흰색 빛 효과 */
+    pointer-events: none; /* 마우스 클릭을 방해하지 않도록 함 */
+    z-index: 2000; /* 항상 다른 요소들 위에 표시 */
+}
+
+/* 하수인이 죽을 때 적용될 애니메이션 효과 */
+.is-dying {
+    animation: fade-out-and-implode 0.5s ease-out forwards;
+}
+
+@keyframes fade-out-and-implode {
+    0% {
+        transform: scale(1.1);
+        opacity: 1;
+        filter: saturate(1.5); /* 채도를 높여 잠시 밝아지는 효과 */
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+        filter: blur(5px); /* 흐려지면서 사라지는 효과 */
+    }
+}
