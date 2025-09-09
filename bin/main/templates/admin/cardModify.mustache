@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>카드 수정 / 등록</title>
+  <style>
+    fieldset {
+      border: none;
+      padding: 0;
+    }
+    fieldset label {
+      margin-right: 1em;
+    }
+    .hidden-row {
+      display: none;
+    }
+    textarea[name="description"] {
+        width: calc(100% - 10px);
+        padding: 5px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+    }
+    .ability-group {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        position: relative;
+    }
+    .ability-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .ability-group select,
+    .ability-group input[type="number"],
+    .ability-group input[type="text"] {
+        width: calc(100% - 10px);
+        padding: 5px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+    }
+    .ability-group .effect-params-container input {
+        margin-bottom: 5px;
+    }
+    .ability-group .remove-ability-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+    }
+    .add-ability-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .ability-buttons {
+        text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <h1>카드 수정 (No: {{card.no}})</h1>
+  <form id="cardForm" action="/admin/card/{{card.no}}" method="post">
+    <table>
+      <tr>
+        <td>이름</td>
+        <td><input type="text" name="name" value="{{card.name}}" required/></td>
+      </tr>
+      <tr>
+        <td>타입</td>
+        <td>
+          <select name="type" id="cardType" onchange="handleCardTypeChange()">
+            <option value="하수인" {{#selType하수인}}selected{{/selType하수인}}>하수인</option>
+            <option value="주문"   {{#selType주문}}selected{{/selType주문}}>주문</option>
+            <option value="무기"   {{#selType무기}}selected{{/selType무기}}>무기</option>
+          </select>
+        </td>
+      </tr>
+      <tr id="costRow">
+        <td>비용</td>
+        <td><input type="number" name="cost"  value="{{card.cost}}" required/></td>
+      </tr>
+      <tr id="attackRow">
+        <td>공격력</td>
+        <td><input type="number" name="attack" value="{{card.attack}}" required/></td>
+      </tr>
+      <tr id="healthRow">
+        <td id="healthLabel">체력</td>
+        <td><input type="number" name="health" value="{{card.health}}" required/></td>
+      </tr>
+      <tr>
+        <td>설명</td>
+        <td>
+          <textarea name="description" rows="3" cols="40" placeholder="유저에게 보일 효과 입력">{{#card.description}}{{card.description}}{{/card.description}}{{^card.description}}{{/card.description}}</textarea>
+        </td>
+      </tr>
+      <tr>
+        <td>키워드</td>
+        <td>
+          <fieldset>
+            <label><input type="checkbox" name="keywords" value="돌진"           {{#sel돌진}}checked{{/sel돌진}}> 돌진</label>
+            <label><input type="checkbox" name="keywords" value="도발"           {{#sel도발}}checked{{/sel도발}}> 도발</label>
+            <label><input type="checkbox" name="keywords" value="은신"           {{#sel은신}}checked{{/sel은신}}> 은신</label>
+            <label><input type="checkbox" name="keywords" value="독성"           {{#sel독성}}checked{{/sel독성}}> 독성</label>
+            <label><input type="checkbox" name="keywords" value="천상의 보호막"  {{#sel천상의 보호막}}checked{{/sel천상의 보호막}}> 천상의 보호막</label>
+            <label><input type="checkbox" name="keywords" value="생명력 흡수"    {{#sel생명력 흡수}}checked{{/sel생명력 흡수}}> 생명력 흡수</label>
+            <label><input type="checkbox" name="keywords" value="과부하"         {{#sel과부하}}checked{{/sel과부하}}> 과부하</label>
+            <label><input type="checkbox" name="keywords" value="질풍"           {{#sel질풍}}checked{{/sel질풍}}> 질풍</label>
+            <label><input type="checkbox" name="keywords" value="속공"           {{#sel속공}}checked{{/sel속공}}> 속공</label>
+            <label><input type="checkbox" name="keywords" value="빙결"           {{#sel빙결}}checked{{/sel빙결}}> 빙결</label>
+            <label><input type="checkbox" name="keywords" value="잔상"           {{#sel잔상}}checked{{/sel잔상}}> 잔상</label>
+          </fieldset>
+        </td>
+      </tr>
+      <tr>
+        <td>능력 관리</td>
+        <td>
+          <div id="abilitiesContainer"></div>
+          <button type="button" class="add-ability-btn" onclick="addAbilityRow()">+ 능력 추가</button>
+        </td>
+      </tr>
+      <input type="hidden" name="abilitiesJson" id="abilitiesJsonField">
+      <tr>
+        <td colspan="2">
+          <button type="submit">저장</button>
+          <a href="/admin/card">취소</a>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+  <div id="abilityTemplate" class="ability-group" style="display: none;">
+    <button type="button" class="remove-ability-btn" onclick="removeAbilityRow(this)">X</button>
+    
+<label>발동 시점:</label>
+    <select class="ability-trigger-event">
+      <option value="">선택하세요</option>
+      <option value="BATTLECRY">BATTLECRY (전투의 함성)</option>
+      <option value="DEATHRATTLE">DEATHRATTLE (죽음의 메아리)</option>
+      <option value="ON_PLAY">ON_PLAY (카드 플레이 시)</option>
+      <option value="ON_TURN_START">ON_TURN_START (턴 시작 시)</option>
+      <option value="ON_TURN_END">ON_TURN_END (턴 종료 시)</option>
+      <option value="ON_MINION_PLAYED">ON_MINION_PLAYED (하수인 낼 때마다)</option>
+      <option value="ON_MINION_DEATH">ON_MINION_DEATH (내 하수인 죽을 때마다)</option>
+      <option value="ON_ANY_SPELL_CAST">ON_ANY_SPELL_CAST (주문 시전 시 - 상대/나 관계 없음)</option>
+      <option value="ON_MY_SPELL_CAST">ON_MY_SPELL_CAST (내가 주문 시전 시)</option>
+      <option value="ON_OPPONENT_SPELL_CAST">ON_OPPONENT_SPELL_CAST (상대가 주문 시전 시)</option>
+      <option value="NONE">NONE (없음 - 지속 능력 등)</option>
+    </select>
+    
+    <label>효과 종류:</label>
+    <select class="ability-effect-type">
+      <option value="">선택하세요</option>
+      <option value="DEAL_DAMAGE">DEAL_DAMAGE (피해 주기)</option>
+      <option value="DRAW_CARD">DRAW_CARD (카드 드로우)</option>
+      <option value="HEAL">HEAL (생명력 회복)</option>
+      <option value="SUMMON_MINION">SUMMON_MINION (하수인 소환)</option>
+      <option value="GAIN_MANA">GAIN_MANA (마나 획득)</option>
+      <option value="GAIN_ARMOR">GAIN_ARMOR (방어도 획득)</option>
+      <option value="MODIFY_STATS">MODIFY_STATS (스탯 변경)</option>
+    </select>
+
+    <label>대상 범위:</label>
+    <select class="ability-target-scope">
+      <option value="">선택하세요</option>
+      <option value="ENEMY_HERO">ENEMY_HERO (적 영웅)</option>
+      <option value="FRIENDLY_MINION">FRIENDLY_MINION (아군 하수인)</option>
+      <option value="ENEMY_MINION">ENEMY_MINION (적군 하수인)</option>
+      <option value="SINGLE_MINION">SINGLE_MINION (하수인 - 아군/적군 하수인 중 하나)</option>
+      <option value="SINGLE_CHARACTER">SINGLE_CHARACTER (캐릭터 - 영웅/하수인 중 하나)</option>
+      <option value="ALL_ENEMIES">ALL_ENEMIES (모든 적 - 영웅/하수인 포함)</option>
+      <option value="RANDOM_ENEMY_MINION">RANDOM_ENEMY_MINION (무작위 적 하수인)</option>
+      <option value="SELF">SELF (자신 - 영웅)</option>
+      <option value="SELF_BOARD">SELF_BOARD (내 필드 하수인)</option>
+      <option value="ENEMY_BOARD">ENEMY_BOARD (상대 필드 하수인)</option>
+      <option value="ALL_CHARACTERS">ALL_CHARACTERS (모든 캐릭터 - 아군/적 영웅, 아군/적 하수인)</option>
+      <option value="ALL_HEROES">ALL_HEROES (모든 영웅 - 아군/적 영웅)</option>
+      <option value="NONE">NONE (대상 없음)</option>
+    </select>
+
+    <div class="effect-params-container"></div>
+  </div>
+
+
+  <script>
+    // 카드 타입에 따른 필드 활성화/비활성화
+    function handleCardTypeChange() {
+      const cardType      = document.getElementById('cardType').value;
+      const attackRow     = document.getElementById('attackRow');
+      const healthRow     = document.getElementById('healthRow');
+      const healthLabel   = document.getElementById('healthLabel');
+      const attackInput   = attackRow.querySelector('input[name="attack"]');
+      const healthInput   = healthRow.querySelector('input[name="health"]');
+
+      if (cardType === '주문') {
+        attackRow.classList.add('hidden-row');
+        healthRow.classList.add('hidden-row');
+        attackInput.disabled = true;
+        healthInput.disabled = true;
+      } else if (cardType === '무기') {
+        attackRow.classList.remove('hidden-row');
+        healthRow.classList.remove('hidden-row');
+        attackInput.disabled = false;
+        healthInput.disabled = false;
+        healthLabel.textContent = '내구도';
+      } else {
+        attackRow.classList.remove('hidden-row');
+        healthRow.classList.remove('hidden-row');
+        attackInput.disabled = false;
+        healthInput.disabled = false;
+        healthLabel.textContent = '체력';
+      }
+    }
+
+    // 능력 추가/삭제 및 데이터 수집을 위한 JavaScript
+    const abilitiesContainer   = document.getElementById('abilitiesContainer');
+    const abilityTemplate      = document.getElementById('abilityTemplate');
+    const abilitiesJsonField   = document.getElementById('abilitiesJsonField');
+    const cardForm             = document.getElementById('cardForm');
+
+    // EFFECT_TYPE에 따른 효과 파라미터 필드 정의
+    const effectParamsSchema = {
+        "DEAL_DAMAGE": [
+            { name: "amount",       label: "피해량",       type: "number", required: true,  placeholder: "예: 1" },
+            { name: "target_amount",label: "반복 횟수 (선택)", type: "number", optional: true, placeholder: "예: 3" }
+        ],
+        "DRAW_CARD": [
+            { name: "amount", label: "드로우 수", type: "number", required: true, placeholder: "예: 1" }
+        ],
+        "HEAL": [
+            { name: "amount", label: "회복량", type: "number", required: true, placeholder: "예: 1" }
+        ],
+        "SUMMON_MINION": [
+            { name: "attack",  label: "소환될 하수인 공격력", type: "number", required: true, placeholder: "예: 1" },
+            { name: "health",  label: "소환될 하수인 체력",   type: "number", required: true, placeholder: "예: 1" },
+            { name: "card_no", label: "소환될 특정 하수인 No (선택)", type: "text", optional: true, placeholder: "예: 123" } 
+        ],
+        "GAIN_MANA": [
+            { name: "amount", label: "마나 획득량", type: "number", required: true, placeholder: "예: 1" }
+        ],
+        "GAIN_ARMOR": [
+            { name: "amount", label: "방어도 획득량", type: "number", required: true, placeholder: "예: 1" }
+        ],
+        "MODIFY_STATS": [
+            { name: "attack_gain", label: "공격력 변경량", type: "number", required: true, placeholder: "예: 1" },
+            { name: "health_gain", label: "체력 변경량",   type: "number", required: true, placeholder: "예: 1" },
+            { name: "duration",     label: "지속 시간 (예: THIS_TURN)", type: "text", optional: true, placeholder: "예: PERMANENT, THIS_TURN" }
+        ]
+    };
+
+    // effectType에 따라 동적으로 파라미터 입력 필드를 렌더링하는 함수
+    function renderEffectParamsFields(effectType, container, initialParams = {}) {
+        container.innerHTML = '';
+        const schema = effectParamsSchema[effectType];
+
+        if (schema) {
+            schema.forEach(field => {
+                const label = document.createElement('label');
+                label.textContent = field.label + (field.required ? ' *' : '');
+                container.appendChild(label);
+
+                const input = document.createElement('input');
+                input.type        = field.type;
+                input.name        = `param_${field.name}`;
+                input.classList.add('effect-param-field');
+                input.placeholder = field.placeholder || '';
+                if (field.required) input.required = true;
+
+                if (initialParams[field.name] !== undefined) {
+                    input.value = field.type === 'number'
+                        ? Number(initialParams[field.name])
+                        : initialParams[field.name];
+                }
+                container.appendChild(input);
+            });
+        }
+    }
+
+    // 능력 입력 그룹 추가 함수
+    function addAbilityRow(abilityData = {}) {
+        const newGroup = abilityTemplate.cloneNode(true);
+        newGroup.style.display = 'block';
+        newGroup.removeAttribute('id');
+
+        const triggerEventSelect = newGroup.querySelector('.ability-trigger-event');
+        const effectTypeSelect   = newGroup.querySelector('.ability-effect-type');
+        const targetScopeSelect  = newGroup.querySelector('.ability-target-scope');
+        const paramsContainer    = newGroup.querySelector('.effect-params-container');
+
+        if (abilityData.triggerEvent) triggerEventSelect.value = abilityData.triggerEvent;
+        if (abilityData.effectType)   effectTypeSelect.value   = abilityData.effectType;
+        if (abilityData.targetScope)  targetScopeSelect.value  = abilityData.targetScope;
+
+        // effectParamsJson이 Map<String, Object> 타입으로 오므로, 바로 전달
+        let initialParams = abilityData.effectParamsJson || {}; 
+
+        renderEffectParamsFields(effectTypeSelect.value, paramsContainer, initialParams);
+
+        effectTypeSelect.addEventListener('change', function() {
+            renderEffectParamsFields(this.value, paramsContainer);
+        });
+
+        abilitiesContainer.appendChild(newGroup);
+    }
+
+    // 능력 입력 그룹 삭제 함수
+    function removeAbilityRow(button) {
+        button.closest('.ability-group').remove();
+    }
+
+    // 폼 제출 전에 모든 능력 데이터를 JSON으로 취합
+    function collectAbilitiesJson() {
+        const all = [];
+        document.querySelectorAll('.ability-group:not(#abilityTemplate)').forEach(group => {
+            const triggerEvent = group.querySelector('.ability-trigger-event').value;
+            const effectType   = group.querySelector('.ability-effect-type').value;
+            const targetScope  = group.querySelector('.ability-target-scope').value;
+            const paramsDiv    = group.querySelector('.effect-params-container');
+
+            if (!triggerEvent || !effectType || !targetScope) {
+                alert('모든 능력 필드를 선택하세요.');
+                throw new Error('Missing ability fields');
+            }
+
+            const schema = effectParamsSchema[effectType] || [];
+            const params = {};
+
+            schema.forEach(field => {
+                const input = paramsDiv.querySelector(`input[name="param_${field.name}"]`);
+                // 필수가 아니면서 값이 비어있으면 스킵
+                if (!field.required && (!input || !input.value.trim())) {
+                    return; 
+                }
+                if (input && input.value.trim()) {
+                    params[field.name] = field.type === 'number'
+                        ? Number(input.value)
+                        : input.value;
+                } else if (field.required && (!input || !input.value.trim())) {
+                    // 필수 필드가 비어있는 경우
+                    alert(`필수 파라미터 '${field.label}'을(를) 입력해주세요.`);
+                    throw new Error('Missing required param');
+                }
+            });
+
+            all.push({
+                triggerEvent,
+                effectType,
+                targetScope,
+                effectParamsJson: Object.keys(params).length ? params : null // JSON.stringify 하지 않고 객체 그대로 전달
+            });
+        });
+
+        abilitiesJsonField.value = JSON.stringify(all); // 최종적으로 한 번만 문자열화
+    }
+
+    cardForm.addEventListener('submit', function(e) {
+        try {
+            collectAbilitiesJson();
+        } catch (error) { // 에러 객체를 받아서 메시지를 보여주면 더 좋습니다.
+            console.error("능력 데이터 수집 오류:", error);
+            // alert는 collectAbilitiesJson 내부에서 이미 호출될 수 있으므로, 추가적인 alert는 필요 없을 수 있습니다.
+            e.preventDefault();
+        }
+    });
+
+    // 페이지 로드 시 초기 상태 및 기존 능력 로드
+    document.addEventListener('DOMContentLoaded', function() {
+        handleCardTypeChange();
+
+        // abilitiesJson이 이미 JSON 객체로 주입되므로, JSON.parse 불필요
+        const initialAbilitiesJson = {{{abilitiesJson}}}; 
+        if (Array.isArray(initialAbilitiesJson) && initialAbilitiesJson.length) {
+            initialAbilitiesJson.forEach(ability => addAbilityRow(ability));
+        }
+    });
+  </script>
+</body>
+</html>

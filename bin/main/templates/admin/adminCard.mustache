@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<style>
+  /* 클릭 가능한 행에 포인터 표시 */
+  tr[data-id] {
+    cursor: pointer;
+    transition: font-weight 0.1s ease;
+  }
+  /* 마우스 올리면 글씨 굵게 */
+  tr[data-id]:hover {
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+<form method="get" action="/card">
+  비용 ≥ <input type="number" name="minCost" value="{{minCost}}" style="width:4em"/>
+  정렬: 
+  <select name="sortBy">
+    <option value=""      {{^sortBy}}selected{{/sortBy}}>기본</option>
+    <option value="cost"   {{#selCost}}selected{{/selCost}}>비용</option>
+    <option value="attack" {{#selAttack}}selected{{/selAttack}}>공격력</option>
+    <option value="health" {{#selHealth}}selected{{/selHealth}}>체력</option>
+  </select>
+  <button type="submit">적용</button>
+</form>
+
+<table border="1">
+  <tr>
+    <th>카드명</th><th>비용</th><th>공격력</th><th>체력</th>
+  </tr>
+  {{#cardList}}
+  <tr data-id="{{no}}">
+    <td>{{name}}</td>
+    <td>{{cost}}</td>
+    <td>{{attack}}</td>
+    <td>{{health}}</td>
+  </tr>
+  {{/cardList}}
+</table>
+<script>
+	document.addEventListener('DOMContentLoaded', function(){
+		document.querySelectorAll('tr[data-id]').forEach(function(row){
+			row.addEventListener('click', function(){
+				var cardId = this.getAttribute('data-id')
+				window.location.href = '/admin/card/' + cardId
+			})
+		})
+	})
+</script>
+
+</body>
+</html>

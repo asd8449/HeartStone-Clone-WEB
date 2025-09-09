@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>하스스톤</title>
+</head>
+<body>
+    <h1>하스스톤에 오신 것을 환영합니다</h1>
+
+    {{#user}}
+        <p><strong>{{user.name}}</strong>님, 환영합니다!</p>
+        <a href="/game/select-deck">게임 시작하기</a>
+        <br>
+        <a href="/logout">로그아웃</a>
+        <a href="/deck">덱 보기</a>
+    {{/user}}
+
+    {{^user}}
+        <p>게임을 시작하려면 로그인이 필요합니다.</p>
+        <a href="/login">로그인</a>
+        <br>
+        <a href="/signup">회원가입</a>
+    {{/user}}
+
+    <hr>
+    <a href="/card">카드 목록 보기</a>
+    <br>
+    <a href="/admin/card">관리자 카드 관리</a>
+
+</body>
+</html>
